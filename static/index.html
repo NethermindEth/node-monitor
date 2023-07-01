@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<h1>Dashboard</h1>
+<div id="data-container"></div>
+<script>
+    async function fetchData() {
+        const response = await fetch('/api/getData');
+        const data = await response.json();
+        displayData(data);
+    }
+
+    function displayData(data) {
+        const container = document.getElementById('data-container');
+        data.forEach(node => {
+            container.appendChild(createNodeTable(node));
+        });
+    }
+
+    function createNodeTable(node) {
+        const table = document.createElement('table');
+        const headers = ['IP', 'Enode', 'Specs', 'Data'];
+        const headerRow = table.insertRow();
+
+        headers.forEach(header => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow.appendChild(th);
+        });
+
+        const row = table.insertRow();
+        row.insertCell().textContent = node.ip;
+        row.insertCell().textContent = node.enode;
+        row.insertCell().innerHTML = createSpecsTable(node.specs);
+        row.insertCell().innerHTML = createEthereumNodeDataTable(node.data);
+
+        return table;
+    }
+
+    function createSpecsTable(specs) {
+        const keys = ['CPU', 'GPU', 'RAM', 'Storage', 'StorageType', 'OS', 'Architecture'];
+        let html = '<table>';
+
+        keys.forEach(key => {
+            html += '<tr><td>' + key + '</td><td>' + specs[key.toLowerCase()] + '</td></tr>';
+        });
+
+        html += '</table>';
+        return html;
+    }
+
+    function createEthereumNodeDataTable(data) {
+        let html = '';
+
+        data.forEach(item => {
+            html += `
+                <table>
+                    <tr><td>Timestamp</td><td>${item.timestamp}</td></tr>
+                    <tr><td>DB Size</td><td>Part Name: ${item.db_size.part_name}, Size: ${item.db_size.size}</td></tr>
+                    <tr><td>Block Processing Info</td><td>
+                        Sync Stage Name: ${item.block_processing_info.sync_stage_name}<br>
+                        Snap Sync Status: ${item.block_processing_info.snap_sync_status}<br>
+                        Old Bodies Status: ${item.block_processing_info.old_bodies_status}<br>
+                        Old Receipts Status: ${item.block_processing_info.old_receipts_status}<br>
+                        Peers Number: ${item.block_processing_info.peers_number}
+                    </td></tr>
+                    <tr><td>Hardware Usage Data</td><td>
+                        CPU Usage: ${item.hardware_usage_data.cpu_usage}<br>
+                        Memory Usage: ${item.hardware_usage_data.memory_usage}
+                    </td></tr>
+                    <tr><td>Network Usage Data</td><td>
+                        Network In: ${item.network_usage_data.network_in}<br>
+                        Network Out: ${item.network_usage_data.network_out}
+                    </td></tr>
+                </table>`;
+        });
+
+        return html;
+    }
+
+    fetchData();
+</script>
+</body>
+</html>
